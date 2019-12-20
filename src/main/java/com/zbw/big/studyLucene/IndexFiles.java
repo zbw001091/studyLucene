@@ -17,7 +17,6 @@
 package com.zbw.big.studyLucene;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,9 +33,11 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
@@ -46,9 +47,9 @@ import org.apache.lucene.store.FSDirectory;
 
 /**
  * Index all text files under a directory.
- * <p>
- * This is a command-line application demonstrating simple Lucene indexing. Run
- * it with no command-line arguments for usage information.
+ * 
+ * -index D:\indexDir -docs D:\indexSourceDir -update
+ * 
  */
 public class IndexFiles {
 
@@ -103,7 +104,7 @@ public class IndexFiles {
 				// Add new documents to an existing index:
 				iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
 			}
-
+			
 			// Optional: for better indexing performance, if you
 			// are indexing many documents, increase the RAM
 			// buffer. But if you do this, increase the max heap
@@ -173,14 +174,14 @@ public class IndexFiles {
 		try (InputStream stream = Files.newInputStream(file)) {
 			// make a new, empty document
 			Document doc = new Document();
-
+			
 			// Add the path of the file as a field named "path". Use a
 			// field that is indexed (i.e. searchable), but don't tokenize
 			// the field into separate words and don't index term frequency
 			// or positional information:
 			Field pathField = new StringField("path", file.toString(), Field.Store.YES);
 			doc.add(pathField);
-
+			
 			// Add the last modified date of the file a field named "modified".
 			// Use a LongPoint that is indexed (i.e. efficiently filterable with
 			// PointRangeQuery). This indexes to milli-second resolution, which
@@ -189,14 +190,36 @@ public class IndexFiles {
 			// For example the long value 2011021714 would mean
 			// February 17, 2011, 2-3 PM.
 			doc.add(new LongPoint("modified", lastModified));
-
+			
 			// Add the contents of the file to a field named "contents". Specify a Reader,
 			// so that the text of the file is tokenized and indexed, but not stored.
 			// Note that FileReader expects the file to be in UTF-8 encoding.
 			// If that's not the case searching for special characters will fail.
-			doc.add(new TextField("contents",
-					new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))));
-
+			BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+//			doc.add(new TextField("contents", reader));
+			
+			// contents字段，上述使用TextField是无法store的，必须单独使用StoredField进行store
+//			String line = "";
+//			String contents = "";
+//			while((line = reader.readLine()) != null) {
+//				contents += line;
+//			}
+//			System.out.println(contents);
+//			StoredField sfield = new StoredField("contents", contents);
+//			doc.add(sfield);
+			
+			String line = "";
+			String contents = "";
+			while((line = reader.readLine()) != null) {
+				contents += line;
+			}
+			FieldType fieldType = new FieldType();
+			fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);//set是否索引
+			fieldType.setStored(true);//set是否存储
+			fieldType.setTokenized(true);//set是否分类
+			fieldType.setStoreTermVectors(true);//向量存储,document based inverted index,docID.terms[]<freq,pos,offset,payload>
+			doc.add(new Field("contents", contents, fieldType));
+		    
 			if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
 				// New index, so we just add the document (no old document can be there):
 				System.out.println("adding " + file);
