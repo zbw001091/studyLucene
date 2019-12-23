@@ -1,4 +1,4 @@
-package com.zbw.big.studyLucene;
+package com.zbw.big.studyLucene.analyzer;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -13,7 +13,7 @@ public class Tokenizer {
 
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		Version matchVersion = Version.LUCENE_8_3_0; // Substitute desired Lucene version for XY
+		Version matchVersion = Version.LUCENE_8_0_0; // Substitute desired Lucene version for XY
         Analyzer analyzer = new StandardAnalyzer(); // or any other analyzer
         TokenStream ts = analyzer.tokenStream("myfield", new StringReader("some text goes here"));
         // The Analyzer class will construct the Tokenizer, TokenFilter(s), and CharFilter(s),

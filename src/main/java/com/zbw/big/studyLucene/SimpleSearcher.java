@@ -16,6 +16,7 @@ import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -28,6 +29,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.FSDirectory;
@@ -67,6 +69,10 @@ public class SimpleSearcher {
 		    
 		    PrefixQuery prefixQuery = new PrefixQuery(new Term("author", "stock"));
 		    
+		    Query wildcardQuery = new WildcardQuery(new Term("author", "*it*"));
+		    
+		    Query fuzzyQuery = new FuzzyQuery(new Term("author", "smth")); //smth fuzzy with smith
+		    
 		    // 【2】前端页面用户输入的查询条件，构建Query
 		    // 需要对Human输入的查询条件，先做一次analyze（分词/lowercase）
 		    QueryParser parser = new QueryParser("contents", new StandardAnalyzer()); //SmartChineseAnalyzer
@@ -86,7 +92,7 @@ public class SimpleSearcher {
             }
             
 		    // 开始 先identify document+后scoring document(use standard TFIDFSimilarity Model)
-            TopDocs hits = searcher.search(prefixQuery, 10);
+            TopDocs hits = searcher.search(fuzzyQuery, 10);
 //            TopDocs hits = searcher.search(matchallquery, 10);
 //		    TopDocs hits = searcher.search(queryByHuman, 10, sort);
 		    System.out.println(hits.totalHits);

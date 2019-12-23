@@ -9,10 +9,10 @@ import org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat.Mode;
 import org.apache.lucene.codecs.lucene80.Lucene80Codec;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -41,16 +41,18 @@ public class SimpleIndexer {
 		document.add(docvaluefield);
 		**/
 		
-		new SimpleIndexer().index("d:\\indexDir");
+		new SimpleIndexer().index("d:\\indexDir", new StandardAnalyzer());
 	}
 
-	private IndexWriter getWriter() throws Exception{
+	private IndexWriter getWriter(Analyzer analyzer) throws Exception{
 //		Analyzer analyzer = new SmartChineseAnalyzer();
-		Analyzer analyzer = new StandardAnalyzer(); // 标准分词器
+//		Analyzer analyzer = new StandardAnalyzer(); // 标准分词器
+//		IKAnalyzer analyzer = new IKAnalyzer();
+		
 		IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 		// In-Memory Buffer满1MB/满10个document，就自动flush到磁盘Directory
 		iwc.setRAMBufferSizeMB(1);
-		iwc.setMaxBufferedDocs(10);
+		iwc.setMaxBufferedDocs(2);
 		// 影响.fdt field data文件的压缩，compression speed or compression ratio
 		// the default: for high performance
 		iwc.setCodec(new Lucene80Codec(Mode.BEST_SPEED));
@@ -61,9 +63,9 @@ public class SimpleIndexer {
 		return writer;
 	}
 	
-	private void index(String indexDir) throws Exception{
+	private void index(String indexDir, Analyzer analyzer) throws Exception{
 		directory = FSDirectory.open(Paths.get(indexDir));
-		IndexWriter writer = getWriter();
+		IndexWriter writer = getWriter(analyzer);
 		
 		// 【submit document to lucene, begin analyze and inverted indexing】
 		writer.addDocument(createDocumentOfBook()); // 添加文档
