@@ -5,9 +5,12 @@ import java.util.Stack;
 
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.util.AttributeSource;
+import org.apache.lucene.util.BytesRef;
 
 public class SynonymFilter extends TokenFilter {
 	public static final String TOKEN_TYPE_SYNONYM = "SYNONYM";
@@ -16,6 +19,8 @@ public class SynonymFilter extends TokenFilter {
 	private AttributeSource.State current;
 	private final CharTermAttribute termAtt;
 	private final PositionIncrementAttribute posIncrAtt;
+	private final PayloadAttribute payloadAtt;
+	private BytesRef payload;
 //	public char[] termBuf;
 	
 	public SynonymFilter(TokenStream in, SynonymEngine engine) {
@@ -24,6 +29,8 @@ public class SynonymFilter extends TokenFilter {
 		this.engine = engine;
 		this.termAtt = addAttribute(CharTermAttribute.class);
 		this.posIncrAtt = addAttribute(PositionIncrementAttribute.class);
+		this.payloadAtt = addAttribute(PayloadAttribute.class);
+		this.payload = new BytesRef(PayloadHelper.encodeFloat(108));
 	}
 	
 	public boolean incrementToken() throws IOException {
@@ -35,6 +42,7 @@ public class SynonymFilter extends TokenFilter {
 //			termBuf = termAtt.buffer();
 			termAtt.copyBuffer(syn.toCharArray(), 0, syn.toCharArray().length); // set synonym into the termAttr Buf
 			posIncrAtt.setPositionIncrement(0); // set position incr to 0, meaning this is a synonym
+			payloadAtt.setPayload(payload);
 			return true;
 		}
 		if (!input.incrementToken())

@@ -2,7 +2,11 @@ package com.zbw.big.studyLucene.searcher;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.expressions.Expression;
+import org.apache.lucene.expressions.SimpleBindings;
+import org.apache.lucene.expressions.js.JavascriptCompiler;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.function.FunctionScoreQuery;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
@@ -11,6 +15,7 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PointRangeQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.WildcardQuery;
@@ -23,14 +28,15 @@ import org.apache.lucene.util.BytesRef;
 public class DocumentSearcher extends BaseSearcher {
 
 	@Override
-	public Query getAQuery() throws ParseException {
+	public Query getAQuery() throws ParseException, Exception {
 		// 【1.1】程序构建Query
 	    Query queryByMachine = new TermQuery(new Term("contents", "01_camel"));
+	    Query termQuery = new TermQuery(new Term("booknameString", "0bdOFS 7pVGGY"));
 	    
 	    // 【1.2】程序构建PhraseQuery
 	    PhraseQuery.Builder builder = new PhraseQuery.Builder();
-	    builder.add(new Term("title", "中文"), 4);
-	    builder.add(new Term("title", "跳槽"), 5);
+	    builder.add(new Term("title", "quick"), 4);
+	    builder.add(new Term("title", "dog"), 5);
 	    builder.setSlop(8);
 	    PhraseQuery phraseQuery = builder.build();
 	    
@@ -76,6 +82,17 @@ public class DocumentSearcher extends BaseSearcher {
 	    QueryParser parser = new QueryParser("contents", new StandardAnalyzer()); //SmartChineseAnalyzer
 	    Query queryByHuman = parser.parse("mdosdco07");
 //	    Query queryByHuman = parser.parse("+facebook -MOCK");
+	    
+	    // customize scoring algorithm
+	    // compile an expression:
+	    Expression expr = JavascriptCompiler.compile("_score * ln(bookNo)");
+	    // SimpleBindings just maps variables to SortField instances
+	    SimpleBindings bindings = new SimpleBindings();
+	    bindings.add(new SortField("_score", SortField.Type.SCORE));
+	    bindings.add(new SortField("bookNo", SortField.Type.INT));
+	    // create a query that matches based on 'originalQuery' but
+	    // scores using expr
+	    Query functionScoreQuery = new FunctionScoreQuery(fuzzyQuery, expr.getDoubleValuesSource(bindings));
 	    
 	    return fuzzyQuery;
 	}

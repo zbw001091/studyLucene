@@ -5,8 +5,10 @@ import java.io.StringReader;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
@@ -31,6 +33,8 @@ public class AnalyzerUtils {
         // 添加一个type引用
         TypeAttribute type = tokenStream.addAttribute(TypeAttribute.class);
         
+        PayloadAttribute payloadAttribute = tokenStream.addAttribute(PayloadAttribute.class);
+        
         // 将指针调整到列表的头部
         tokenStream.reset();
         
@@ -48,7 +52,8 @@ public class AnalyzerUtils {
             System.out.print("start->" + offsetAttribute.startOffset() + ", ");
 			// term结束位置
             System.out.print("end->" + offsetAttribute.endOffset() + ": ");
-            System.out.print("type->" + type.type());
+            System.out.print("type->" + type.type() + ", ");
+            System.out.print("payload->" + (payloadAttribute.getPayload() == null ? payloadAttribute.getPayload() : PayloadHelper.decodeFloat(payloadAttribute.getPayload().bytes)));
             System.out.println();
 		}
 		

@@ -61,7 +61,7 @@ public abstract class BaseSearcher {
 		reader.close();
 	}
 	
-	public abstract Query getAQuery() throws ParseException;
+	public abstract Query getAQuery() throws ParseException, Exception;
 	
 	private Sort getASort() {
 		SortField sortField = new SortField("bookNoDocValue", SortField.Type.STRING, true);
@@ -88,10 +88,10 @@ public abstract class BaseSearcher {
 		    int maxDocs = reader.maxDoc();
 		    int numDocs = reader.numDocs();
 		    
-	        Explanation explain = searcher.explain(query, 0);
+	        Explanation explain = searcher.explain(query, 21);
 	        System.out.println(explain.getDescription());
 	        for (Explanation explanation : explain.getDetails()) {
-//	        	System.out.println(explanation);
+	        	System.out.println(explanation);
 	        }
 	        
 		    /**
