@@ -88,6 +88,10 @@ public abstract class BaseSearcher {
 		    int maxDocs = reader.maxDoc();
 		    int numDocs = reader.numDocs();
 		    
+		    // LeafReader(Segment), 从1个Segment里获取content字段的所有terms
+		    System.out.println(reader.leaves().size());
+		    System.out.println(reader.leaves().get(1).reader().terms("content"));
+		    
 	        Explanation explain = searcher.explain(query, 21);
 	        System.out.println(explain.getDescription());
 	        for (Explanation explanation : explain.getDetails()) {

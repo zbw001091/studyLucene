@@ -54,7 +54,7 @@ public class DocumentIndexer extends BaseIndexer {
 		NumericDocValuesField bookNo = new NumericDocValuesField("bookNo", randOfBookNo);
 		document.add(bookNo);
 		document.add(new StoredField("bookNo", new BytesRef(Integer.toString(randOfBookNo).getBytes())));
-
+		
 		// bookNoDocValue, field of doc_values, for sorting and aggs
 		SortedDocValuesField sortedDocValuesField = new SortedDocValuesField("bookNoDocValue", new BytesRef(Integer.toString(randOfBookNo).getBytes()));
 		document.add(sortedDocValuesField);
@@ -79,6 +79,8 @@ public class DocumentIndexer extends BaseIndexer {
 			int randOfAuthor = random.nextInt(10);
 			document.add(new TextField("author", authors[randOfAuthor], Store.YES));
 		}
+		
+		document.add(new TextField("contents", "fGy050", Field.Store.YES));
 		
 //		FieldType fieldType = new FieldType();
 //		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);//set是否索引

@@ -7,7 +7,7 @@ import com.zbw.big.studyLucene.searcher.DocumentSearcher;
 public class DocumentSearchFacade {
 
 	public static void main(String[] args) throws Exception {
-		new DocumentSearcher().search("d:\\indexDir", new StandardAnalyzer(), false);;
+		new DocumentSearcher().search("d:\\indexDir", new StandardAnalyzer(), true);;
 	}
 
 }
