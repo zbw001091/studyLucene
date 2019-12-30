@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Terms;
@@ -45,7 +46,7 @@ public abstract class BaseSearcher {
 	 */
 	public void search(String indexDir, Analyzer analyzer, boolean defaultSortByScore) throws Exception {
 		getReader(indexDir);
-		Query query = getAQuery();
+		Query query = getAQuery(reader);
 		Sort sort = null;
 		if (!defaultSortByScore) {
 			sort = getASort();
@@ -61,7 +62,7 @@ public abstract class BaseSearcher {
 		reader.close();
 	}
 	
-	public abstract Query getAQuery() throws ParseException, Exception;
+	public abstract Query getAQuery(IndexReader reader) throws ParseException, Exception;
 	
 	private Sort getASort() {
 		SortField sortField = new SortField("bookNoDocValue", SortField.Type.STRING, true);
@@ -112,17 +113,51 @@ public abstract class BaseSearcher {
 		    }
 		    
 		    System.out.println("\nResults for: " + query.toString() + ", sorted by " + sort);
-		    System.out.println(hits.totalHits);
+		    System.out.println(hits.totalHits + "\n");
 		    
 		    Document d;
 		    for (ScoreDoc scoreDoc : hits.scoreDocs) {
 		    	d = searcher.doc(scoreDoc.doc);
+		    	
+		    	String[] content = d.getValues("content");
+		    	for (int i = 0; i < content.length; i++) {
+		    		System.out.println(content[i]);
+		    	}
+		    	
 		    	// only fields with fieldType.setStored(true), are returned
 		    	for (IndexableField field : d.getFields()) {
 		    		System.out.println("【doc_fieldName】: " + field.name() + "，【doc_fieldValue】: " + field.stringValue());
 		    	}
 			    System.out.println("【doc score】:  " + scoreDoc);
+			    System.out.println("\n");
 		    }
+		    
+		    /** 
+		    // get termVector for 1 doc (docId = 0)
+	    	Fields vector = reader.getTermVectors(0);
+	    	if (vector != null) {
+	    		// get terms from termVector for 1 doc and 1 field (field = contents)
+	    		Terms terms = vector.terms("contents");
+	    		if (terms != null) {
+	    			TermsEnum iterator = terms.iterator();
+	    			BytesRef v;
+	    			while ((v = iterator.next()) != null) {
+	    				System.out.println(v.utf8ToString());
+	    			}
+	    		}
+	    	}
+	    	System.out.println("\n");
+	    	
+	    	// get termVector for 1 doc and 1 field, directly
+	    	Terms terms = reader.getTermVector(0, "contents");
+	    	if (terms != null) {
+    			TermsEnum iterator = terms.iterator();
+    			BytesRef v;
+    			while ((v = iterator.next()) != null) {
+    				System.out.println(v.utf8ToString());
+    			}
+    		}
+    		**/
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

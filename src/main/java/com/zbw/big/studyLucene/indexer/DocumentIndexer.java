@@ -69,10 +69,11 @@ public class DocumentIndexer extends BaseIndexer {
 		document.add(booknameText);
 		
 		// publishyear
+		// IntPoint, only indexed, but not stored by default, use StoredField to store it
 		int intpublishyear = 2010 + random.nextInt(9);
 		IntPoint publishyear = new IntPoint("publishyear", intpublishyear);
-		System.out.println(intpublishyear);
 		document.add(publishyear);
+		document.add(new StoredField("publishyear", intpublishyear));
 		
 		// authors, multi-value field
 		for (int i = 0; i < 3; i++) {
@@ -80,13 +81,16 @@ public class DocumentIndexer extends BaseIndexer {
 			document.add(new TextField("author", authors[randOfAuthor], Store.YES));
 		}
 		
-		document.add(new TextField("contents", "fGy050", Field.Store.YES));
+//		document.add(new TextField("contents", "fGy050", Field.Store.YES));
+		document.add(new TextField("contents", "The quick pig jumps over the lazy dog", Field.Store.YES));
+		
+		document.add(new TextField("content", "The quick pig jumps over the lazy dog", Field.Store.YES));
 		
 //		FieldType fieldType = new FieldType();
 //		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);//set是否索引
 //		fieldType.setStored(true);//set是否存储
 //		fieldType.setTokenized(false);//set是否分类
-//		fieldType.setStoreTermVectors(true);//向量存储,document based inverted index,docID.terms[]<freq,pos,offset,payload>
+//		fieldType.setStoreTermVectors(true);//向量存储, document based inverted index,docID.terms[]<freq,pos,offset,payload>
 //		fieldType.setDocValuesType(DocValuesType.SORTED);
 //		document.add(new Field("bookNoDocValue", Integer.toString(random.nextInt(62)), fieldType));
 		
