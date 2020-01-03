@@ -17,6 +17,7 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -128,10 +129,12 @@ public class DocumentSearcher extends BaseSearcher {
 	    /**
 	         * 在所有document中，按score从高到低的排名:
 	         * 虽然是DisjunctionMaxQuery，但term在同1个field里的score，肯定比term拆散分散在多个field里的score，要高
-	         * 有1个field含有brown pig，另1个field没有任何brown或者pig也无所谓
-	         * 有2个field都有pig，但都没有brown
-	         * 有1个field有brown，另1个field有pig
-	         * 只有1个field有brown
+	         * 假设query的是brown pig
+	     * 
+	         * 一篇doc，其中，有1个field含有brown pig，另1个field没有任何brown或者pig也无所谓
+	         * 一篇doc，其中，有2个field都有pig，但都没有brown
+	         * 一篇doc，其中，有1个field有brown，另1个field有pig
+	         * 一篇doc，其中，只有1个field有brown
 	     */
 	    Query termQueryDisjunction1 = new QueryParser("content", new StandardAnalyzer()).parse("brown pig");
 	    Query termQueryDisjunction2 = new QueryParser("contents", new StandardAnalyzer()).parse("brown pig");
@@ -139,6 +142,8 @@ public class DocumentSearcher extends BaseSearcher {
 	    termQueryDisjunction.add(termQueryDisjunction1);
 	    termQueryDisjunction.add(termQueryDisjunction2);
 	    DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(termQueryDisjunction, 0.1f);
+	    
+	    BoostQuery boostQuery = new BoostQuery(fuzzyQuery, 2);
 	    
 	    // customize scoring algorithm
 	    // compile an expression:
@@ -151,7 +156,7 @@ public class DocumentSearcher extends BaseSearcher {
 	    // scores using expr
 	    Query functionScoreQuery = new FunctionScoreQuery(fuzzyQuery, expr.getDoubleValuesSource(bindings));
 	    
-	    return numberSetQuery;
+	    return boostQuery;
 	}
 
 }

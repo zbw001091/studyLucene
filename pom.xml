@@ -50,6 +50,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-highlighter</artifactId>
+			<version>8.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-analyzers-smartcn</artifactId>
 			<version>8.0.0</version>
 		</dependency>
