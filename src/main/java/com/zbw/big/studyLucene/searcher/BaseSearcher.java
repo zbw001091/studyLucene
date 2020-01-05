@@ -6,9 +6,12 @@ import java.nio.file.Paths;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.SegmentCommitInfo;
+import org.apache.lucene.index.SegmentInfo;
+import org.apache.lucene.index.SegmentInfos;
+import org.apache.lucene.index.StandardDirectoryReader;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -73,6 +76,28 @@ public abstract class BaseSearcher {
 	}
 	
 	private void startSearch(Query query, Sort sort) {
+		SegmentInfos sis = ((StandardDirectoryReader)reader).getSegmentInfos();
+		System.out.println("Segments_N: " + sis.getVersion());
+		System.out.println("Segments_N: " + sis.getCommitLuceneVersion());
+		System.out.println("Segments_N: " + sis.getMinSegmentLuceneVersion());
+		System.out.println("Segments_N: " + sis.getIndexCreatedVersionMajor());
+		System.out.println("Segments_N: " + sis.counter);
+		System.out.println("Segments_N: " + sis.toString());
+		System.out.println("Segments_N: " + sis.size() + " segments");
+		for (int i = 0; i < sis.size(); i++) {
+			SegmentCommitInfo sci = sis.info(i);
+			sci.getDelCount();
+			// 该segment中的.dvm和.dvd
+			System.out.println(".sci.DocValuesGeneration: " + sci.getDocValuesGen());
+			// 该segment中的.fnm
+			System.out.println(".sci.getFieldInfosGen: " + sci.getFieldInfosGen());
+			SegmentInfo si = sci.info;
+			System.out.println(".si.name: " + si.name);
+			si.getCodec();
+			si.getDiagnostics();
+			si.getAttributes();
+		}
+		
 		try {
 			IndexSearcher searcher = new IndexSearcher(reader);
 	        TFIDFSimilarity tfidf = new ClassicSimilarity();
@@ -90,7 +115,8 @@ public abstract class BaseSearcher {
 		    int numDocs = reader.numDocs();
 		    
 		    // LeafReader(Segment), 从1个Segment里获取content字段的所有terms
-		    System.out.println(reader.leaves().size());
+		    System.out.println();
+		    System.out.println(reader.leaves().size() + " leafReaders/segments");
 		    System.out.println(reader.leaves().get(1).reader().terms("content"));
 		    
 	        Explanation explain = searcher.explain(query, 21);

@@ -39,15 +39,13 @@ public abstract class BaseIndexer {
 	public void update(String indexDir, Analyzer analyzer) throws Exception {
 		directory = FSDirectory.open(Paths.get(indexDir));
 		IndexWriter writer = getWriter(analyzer);
-		
-		
 	}
 	
 	public void delete(String indexDir, Analyzer analyzer) throws Exception {
 		directory = FSDirectory.open(Paths.get(indexDir));
 		IndexWriter writer = getWriter(analyzer);
 		
-		writer.deleteDocuments(new Term("booknameText", "vcn4gw"));
+		writer.deleteDocuments(new Term("booknameText", "hkeyck"));
 		writer.commit();
 		writer.close();
 	}
