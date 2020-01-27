@@ -17,6 +17,7 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FuzzyQuery;
@@ -73,6 +74,13 @@ public class DocumentSearcher extends BaseSearcher {
 	    PointRangeQuery numberRangeQuery = (PointRangeQuery)IntPoint.newRangeQuery("publishyear", 2018, 2019);
 	    PointRangeQuery numberExactQuery = (PointRangeQuery)IntPoint.newExactQuery("publishyear", 2012);
 	    Query numberSetQuery = (Query)IntPoint.newSetQuery("publishyear", 2012, 2017);
+	    
+	    // 【1.7】BooleanQuery + BoostQuery
+	    BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+	    booleanQueryBuilder.add(termQuery, BooleanClause.Occur.SHOULD);
+	    booleanQueryBuilder.add(new BoostQuery(termQueryByFrequency, 100), BooleanClause.Occur.SHOULD); //尽量通过这个查询条件来匹配打分
+	    booleanQueryBuilder.setMinimumNumberShouldMatch(1);
+	    Query booleanQuery = booleanQueryBuilder.build();
 	    
 	    PrefixQuery prefixQuery2 = new PrefixQuery(new Term("content", "jump"));
 	    PrefixQuery prefixQuery = new PrefixQuery(new Term("author", "stock"));
@@ -156,7 +164,7 @@ public class DocumentSearcher extends BaseSearcher {
 	    // scores using expr
 	    Query functionScoreQuery = new FunctionScoreQuery(fuzzyQuery, expr.getDoubleValuesSource(bindings));
 	    
-	    return boostQuery;
+	    return booleanQuery;
 	}
 
 }

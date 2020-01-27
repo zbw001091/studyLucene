@@ -60,6 +60,26 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-spatial</artifactId>
+			<version>8.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-spatial3d</artifactId>
+			<version>8.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-spatial-extras</artifactId>
+			<version>7.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.locationtech.spatial4j</groupId>
+			<artifactId>spatial4j</artifactId>
+			<version>0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-demo</artifactId>
 			<version>8.0.0</version>
 		</dependency>
@@ -86,4 +106,23 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>sgm-maven</id>
+			<url>http://nexus.sgm.saic-gm.com/repository/sgm-maven/</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>sgm-maven</id>
+			<url>http://nexus.sgm.saic-gm.com/repository/sgm-maven/</url>
+			<layout>default</layout>
+		</pluginRepository>
+	</pluginRepositories>
 </project>

@@ -2,6 +2,8 @@ package com.zbw.big.studyLucene.searcher;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -99,7 +101,11 @@ public abstract class BaseSearcher {
 		}
 		
 		try {
-			IndexSearcher searcher = new IndexSearcher(reader);
+//			IndexSearcher searcher = new IndexSearcher(reader);
+			
+			ExecutorService es = Executors.newFixedThreadPool(5);
+			IndexSearcher searcher = new IndexSearcher(reader, es);
+			
 	        TFIDFSimilarity tfidf = new ClassicSimilarity();
 	        searcher.setSimilarity(tfidf);
 	        TopDocs hits = null;

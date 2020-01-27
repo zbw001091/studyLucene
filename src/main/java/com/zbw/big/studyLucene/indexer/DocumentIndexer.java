@@ -2,12 +2,15 @@ package com.zbw.big.studyLucene.indexer;
 
 import java.util.Random;
 
+import org.apache.lucene.document.BinaryDocValuesField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
+import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -48,17 +51,33 @@ public class DocumentIndexer extends BaseIndexer {
 		StringField bookid = new StringField("bookid", "1", Field.Store.YES);
 		document.add(bookid);
 		
-		// bookNo, field used for customized score. functionScoreQuery.
+		// (1) bookNo, field used for customized score. functionScoreQuery.
 		int randOfBookNo = random.nextInt(62);
 		System.err.println("DocumentIndexer.bookNo: " + randOfBookNo);
 		NumericDocValuesField bookNo = new NumericDocValuesField("bookNo", randOfBookNo);
 		document.add(bookNo);
 		document.add(new StoredField("bookNo", new BytesRef(Integer.toString(randOfBookNo).getBytes())));
 		
-		// bookNoDocValue, field of doc_values, for sorting and aggs
+		// (2) bookNoSortedNumericDV, SortedNumericDocValues support multi-value
+		SortedNumericDocValuesField sortedNumericDocValuesField1 = new SortedNumericDocValuesField("bookNoSortedNumericDV", randOfBookNo);
+		SortedNumericDocValuesField sortedNumericDocValuesField2 = new SortedNumericDocValuesField("bookNoSortedNumericDV", randOfBookNo+1);
+		document.add(sortedNumericDocValuesField1);
+		document.add(sortedNumericDocValuesField2);
+		
+		// (3) bookNoDocValue, field of doc_values, for sorting and aggs
 		SortedDocValuesField sortedDocValuesField = new SortedDocValuesField("bookNoDocValue", new BytesRef(Integer.toString(randOfBookNo).getBytes()));
 		document.add(sortedDocValuesField);
 		document.add(new StoredField("bookNoDocValue", new BytesRef(Integer.toString(randOfBookNo).getBytes())));
+		
+		// (4) bookNoBinaryDV, BinaryDocValuesField
+		BinaryDocValuesField binaryDocValuesField = new BinaryDocValuesField("bookNoBinaryDV", new BytesRef("hello"));
+		document.add(binaryDocValuesField);
+		
+		// (5) bookNoSrtedSetDV, SortedSetDocValuesField support multi-value
+		SortedSetDocValuesField sortedSetDocValuesField1 = new SortedSetDocValuesField("bookNoSrtedSetDV", new BytesRef("hello1"));
+		SortedSetDocValuesField sortedSetDocValuesField2 = new SortedSetDocValuesField("bookNoSrtedSetDV", new BytesRef("hello2"));
+		document.add(sortedSetDocValuesField1);
+		document.add(sortedSetDocValuesField2);
 		
 		// booknameString, index, but not tokenized
 		StringField booknameString = new StringField("booknameString", sb.toString(), Field.Store.YES);
@@ -88,10 +107,11 @@ public class DocumentIndexer extends BaseIndexer {
 		
 //		FieldType fieldType = new FieldType();
 //		fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);//set是否索引
-//		fieldType.setStored(true);//set是否存储
+//		fieldType.setDocValuesType(DocValuesType.SORTED);
+//		fieldType.setStored(true);//set是否存储.fdt(field data) .fdx(field index)
 //		fieldType.setTokenized(false);//set是否分类
 //		fieldType.setStoreTermVectors(true);//向量存储, document based inverted index,docID.terms[]<freq,pos,offset,payload>
-//		fieldType.setDocValuesType(DocValuesType.SORTED);
+//		fieldType.omitNorms();
 //		document.add(new Field("bookNoDocValue", Integer.toString(random.nextInt(62)), fieldType));
 		
 		return document;
