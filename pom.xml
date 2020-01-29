@@ -45,6 +45,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>8.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-suggest</artifactId>
 			<version>8.0.0</version>
 		</dependency>
@@ -80,7 +85,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-demo</artifactId>
+			<artifactId>lucene-facet</artifactId>
 			<version>8.0.0</version>
 		</dependency>
 		<dependency>
@@ -106,6 +111,5 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
 	
 </project>

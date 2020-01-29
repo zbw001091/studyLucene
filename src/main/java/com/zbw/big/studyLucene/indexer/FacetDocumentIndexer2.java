@@ -17,18 +17,26 @@ import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LongValueFacetCounts;
 import org.apache.lucene.facet.range.LongRange;
 import org.apache.lucene.facet.range.LongRangeFacetCounts;
+import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField;
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
+import org.apache.lucene.facet.taxonomy.TaxonomyFacetSumValueSource;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
+//import org.apache.lucene.util.TestUtil;
+//import org.apache.lucene.util.LuceneTestCase;
 
 public class FacetDocumentIndexer2 {
 	private final Directory indexDir = new RAMDirectory();
@@ -45,8 +53,7 @@ public class FacetDocumentIndexer2 {
 	final LongRange PAST_DAY = new LongRange("Past day", this.nowSec - 86400L, true, this.nowSec, true);
 
 	public FacetDocumentIndexer2() {
-		this.config.setHierarchical("Author", true);
-		this.config.setHierarchical("Publish Date", true);
+
 	}
 
 	/**
@@ -57,6 +64,9 @@ public class FacetDocumentIndexer2 {
 	private void index() throws IOException {
 		IndexWriter indexWriter = new IndexWriter(this.indexDir,
 				new IndexWriterConfig(new WhitespaceAnalyzer()).setOpenMode(IndexWriterConfig.OpenMode.CREATE));
+
+//		this.config.setHierarchical("Author", true);
+		this.config.setHierarchical("Publish Date", true); // 3 level, year/month/date, new String[] { "2010", "10", "15" }
 
 		DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(this.taxoDir);
 
@@ -126,13 +136,78 @@ public class FacetDocumentIndexer2 {
 			doc.add(new NumericDocValuesField("longField", l % 5));
 			indexWriter.addDocument(doc);
 		}
-		
+
 		// Also add Long.MAX_VALUE
-	    Document doc = new Document();
-	    doc.add(new NumericDocValuesField("longField", Long.MAX_VALUE));
-	    indexWriter.addDocument(doc);
+		Document doc = new Document();
+		doc.add(new NumericDocValuesField("longField", Long.MAX_VALUE));
+		indexWriter.addDocument(doc);
+
+		indexWriter.close();
+	}
+
+	/**
+	 * index SortedSetDocValuesFacetField
+	 * 
+	 * @throws IOException
+	 */
+	private void indexSortedSetDocValuesFacetField() throws IOException {
+		IndexWriter indexWriter = new IndexWriter(this.indexDir,
+				new IndexWriterConfig(new WhitespaceAnalyzer()).setOpenMode(IndexWriterConfig.OpenMode.CREATE));
+
+		this.config.setMultiValued("a", true);
+
+		Document doc = new Document();
+		doc.add(new SortedSetDocValuesFacetField("a", "foo"));
+		doc.add(new SortedSetDocValuesFacetField("a", "bar"));
+		doc.add(new SortedSetDocValuesFacetField("a", "zoo"));
+		doc.add(new SortedSetDocValuesFacetField("b", "baz"));
+		indexWriter.addDocument(config.build(doc));
+
+		doc = new Document();
+		doc.add(new SortedSetDocValuesFacetField("a", "foo"));
+		indexWriter.addDocument(config.build(doc));
+
+		indexWriter.close();
+	}
+	
+	/**
+	 * index SortedSetDocValuesFacetField
+	 * 
+	 * @throws IOException
+	 */
+	private void indexTaxonomyFacetSumValueSource() throws IOException {
+		IndexWriter indexWriter = new IndexWriter(this.indexDir,
+				new IndexWriterConfig(new WhitespaceAnalyzer()).setOpenMode(IndexWriterConfig.OpenMode.CREATE));
+
+		DirectoryTaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(this.taxoDir);
+		
+		Document doc = new Document();
+	    doc.add(new NumericDocValuesField("num", 10));
+	    doc.add(new FacetField("Author", "Bob"));
+	    indexWriter.addDocument(config.build(taxoWriter, doc));
+
+	    doc = new Document();
+	    doc.add(new NumericDocValuesField("num", 20));
+	    doc.add(new FacetField("Author", "Lisa"));
+	    indexWriter.addDocument(config.build(taxoWriter, doc));
+
+	    doc = new Document();
+	    doc.add(new NumericDocValuesField("num", 30));
+	    doc.add(new FacetField("Author", "Lisa"));
+	    indexWriter.addDocument(config.build(taxoWriter, doc));
+
+	    doc = new Document();
+	    doc.add(new NumericDocValuesField("num", 40));
+	    doc.add(new FacetField("Author", "Susan"));
+	    indexWriter.addDocument(config.build(taxoWriter, doc));
+
+	    doc = new Document();
+	    doc.add(new NumericDocValuesField("num", 45));
+	    doc.add(new FacetField("Author", "Frank"));
+	    indexWriter.addDocument(config.build(taxoWriter, doc));
 	    
 	    indexWriter.close();
+		taxoWriter.close();
 	}
 
 	private List<FacetResult> facetsWithSearch() throws IOException {
@@ -147,10 +222,20 @@ public class FacetDocumentIndexer2 {
 		List<FacetResult> results = new ArrayList<FacetResult>();
 
 		// read from facetsCollector into facets
-		Facets facets = new FastTaxonomyFacetCounts(taxoReader, this.config, fc);
+		FastTaxonomyFacetCounts facets = new FastTaxonomyFacetCounts(taxoReader, this.config, fc);
 		results.add(facets.getTopChildren(10, "Author", new String[0]));
-		results.add(facets.getTopChildren(10, "Publish Date", new String[0]));
 
+		// first level group by
+//		results.add(facets.getTopChildren(10, "Publish Date", new String[0]));
+
+		// second level group by - drill down
+//		results.add(facets.getTopChildren(10, "Publish Date", new String[] { "2012" }));
+
+		// third level group by - drill down once more
+		results.add(facets.getTopChildren(10, "Publish Date", new String[] { "2012", "1" }));
+
+		FacetResult result = facets.getTopChildren(10, "Author", new String[0]);
+		
 		indexReader.close();
 		taxoReader.close();
 
@@ -179,6 +264,13 @@ public class FacetDocumentIndexer2 {
 		return null;
 	}
 
+	/**
+	 * Based on facetsWithSearch(), mock end user drill down in the "Publish Date"
+	 * on the webpage
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	private FacetResult drillDown() throws IOException {
 		DirectoryReader indexReader = DirectoryReader.open(this.indexDir);
 		IndexSearcher searcher = new IndexSearcher(indexReader);
@@ -245,15 +337,47 @@ public class FacetDocumentIndexer2 {
 	private FacetResult facetsWithLong() throws IOException {
 		DirectoryReader indexReader = DirectoryReader.open(this.indexDir);
 		IndexSearcher searcher = new IndexSearcher(indexReader);
-		
+
 		// search result, set into facetsCollector
 		FacetsCollector fc = new FacetsCollector();
 		searcher.search(new MatchAllDocsQuery(), fc);
-		
+
 		// read from facetsCollector into facets, group by LongValueFacetCounts
 		LongValueFacetCounts facets = new LongValueFacetCounts("longField", fc, false);
-		
+
 		return facets.getAllChildrenSortByValue();
+	}
+
+	private FacetResult facetsWithSortedSetDocValues() throws IOException {
+		DirectoryReader indexReader = DirectoryReader.open(this.indexDir);
+		IndexSearcher searcher = new IndexSearcher(indexReader);
+
+		// Per-top-reader state:
+		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(searcher.getIndexReader());
+
+		// search result, set into facetsCollector
+		FacetsCollector fc = new FacetsCollector();
+		searcher.search(new MatchAllDocsQuery(), fc);
+
+		// read from facetsCollector into facets, group by SortedSetDocValuesFacetCounts
+		Facets facets = new SortedSetDocValuesFacetCounts(state, fc);
+
+		return facets.getTopChildren(10, "a");
+	}
+
+	
+	private FacetResult facetsWithTaxonomyFacetSumValueSource() throws IOException {
+		DirectoryReader indexReader = DirectoryReader.open(this.indexDir);
+		IndexSearcher searcher = new IndexSearcher(indexReader);
+		TaxonomyReader taxoReader = new DirectoryTaxonomyReader(this.taxoDir);
+
+		// search result, set into facetsCollector
+		FacetsCollector fc = new FacetsCollector();
+		FacetsCollector.search(searcher, new MatchAllDocsQuery(), 10, fc);
+		
+		TaxonomyFacetSumValueSource facets = new TaxonomyFacetSumValueSource(taxoReader, this.config, fc, DoubleValuesSource.fromIntField("num"));
+		
+		return facets.getTopChildren(10, "Author");
 	}
 	
 	public List<FacetResult> runFacetOnly() throws IOException {
@@ -284,6 +408,28 @@ public class FacetDocumentIndexer2 {
 	public FacetResult runFacetsWithLong() throws IOException {
 		indexLong();
 		return facetsWithLong();
+	}
+
+	public void runPathToString() {
+		for (int i = 0; i < 1; i++) {
+			String[] parts = new String[5];
+			for (int j = 0; j < 5; j++) {
+				parts[j] = Integer.toString(j);
+			}
+			String s = FacetsConfig.pathToString(parts);
+			System.out.println(parts);
+			System.out.println(s);
+		}
+	}
+
+	public FacetResult runSortedSetDocValuesFacetField() throws IOException {
+		indexSortedSetDocValuesFacetField();
+		return facetsWithSortedSetDocValues();
+	}
+	
+	public FacetResult runfacetsWithTaxonomyFacetSumValueSource() throws IOException {
+		indexTaxonomyFacetSumValueSource();
+		return facetsWithTaxonomyFacetSumValueSource();
 	}
 	
 }

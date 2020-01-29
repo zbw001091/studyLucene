@@ -25,6 +25,7 @@ public class FacetIndexAndSearchFacade {
 		System.out.println("Publish Date: " + results.get(1));
 
 		// three
+		// Based on runFacetsWithSearch(), mock end user drill down in the "Publish Date" on the webpage
 		System.out.println("3>> Facet drill-down example (Publish Date/2010):");
 		System.out.println("---------------------------------------------");
 		System.out.println("Author: " + example.runDrillDown());
@@ -45,6 +46,22 @@ public class FacetIndexAndSearchFacade {
 		System.out.println("6>> Facet long:");
 		System.out.println("---------------------------------------------");
 		System.out.println("Author: " + example.runFacetsWithLong());
+		
+		// seven - pathToString
+		System.out.println("7>> Facet PathToString:");
+		System.out.println("---------------------------------------------");
+		example.runPathToString();
+		System.out.println();
+		
+		// eight - SortedSetDocValuesFacet
+		System.out.println("8>> Facet SortedSetDocValues:");
+		System.out.println("---------------------------------------------");
+		System.out.println("SortedSetDocValues: " + example.runSortedSetDocValuesFacetField());
+		
+		// nine - TaxonomyFacetSumValueSource
+		System.out.println(">> Facet TaxonomyFacetSumValueSource:");
+		System.out.println("---------------------------------------------");
+		System.out.println("TaxonomyFacetSumValueSource: " + example.runfacetsWithTaxonomyFacetSumValueSource());
 	}
 
 }
