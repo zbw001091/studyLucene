@@ -107,22 +107,5 @@
 		</dependency>
 	</dependencies>
 	
-	<repositories>
-		<repository>
-			<id>sgm-maven</id>
-			<url>http://nexus.sgm.saic-gm.com/repository/sgm-maven/</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>sgm-maven</id>
-			<url>http://nexus.sgm.saic-gm.com/repository/sgm-maven/</url>
-			<layout>default</layout>
-		</pluginRepository>
-	</pluginRepositories>
+	
 </project>
