@@ -47,6 +47,7 @@ public abstract class BaseIndexer {
 		IndexWriter writer = getWriter(analyzer);
 
 		writer.deleteDocuments(new Term("booknameText", "hkeyck"));
+		writer.prepareCommit();
 		writer.commit();
 		writer.close();
 	}
@@ -61,13 +62,13 @@ public abstract class BaseIndexer {
 		System.out.println("MergeScheduler: " + iwc.getMergeScheduler());
 
 		// debugging an index
-//		iwc.setInfoStream(System.out);
+		iwc.setInfoStream(System.out);
 
-		// In-Memory Buffer满1MB/满10个document，就自动flush到磁盘Directory
+		// 全局变量。In-Memory Buffer满1MB，就触发"自动flush"，到磁盘Directory
 		iwc.setRAMBufferSizeMB(1);
+		// 单DWPT变量。In-Memory Buffer达到2个doc，就触发"自动flush"，到磁盘Directory
 		iwc.setMaxBufferedDocs(2);
-
-		// 控制每个DWPT什么时候该自动flush出1个new segment，达到RAM limit就该自动flush
+		// 控制每个DWPT什么时候该"自动flush"出1个new segment，达到RAM limit就该自动flush
 		iwc.setRAMPerThreadHardLimitMB(1);
 
 		// commit point的默认删除机制，segments_N file delete policy
@@ -81,6 +82,8 @@ public abstract class BaseIndexer {
 		// instead for higher performance (but slower):
 		// conf.setCodec(new Lucene80Codec(Mode.BEST_COMPRESSION));
 
+		iwc.setCommitOnClose(true);
+		
 		IndexWriter writer = new IndexWriter(directory, iwc);
 		return writer;
 	}
